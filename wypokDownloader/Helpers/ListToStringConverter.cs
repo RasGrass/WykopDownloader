@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Windows.Data;
 using wypokDownloader.Model;
 
@@ -18,6 +18,7 @@ namespace wypokDownloader.Helpers
             List<HashtagModel> hashtags = value as List<HashtagModel>;
             List<string> hashtagNames =new List<string>();
 
+            Debug.Assert(hashtags != null, "hashtags != null");
             foreach (HashtagModel hashtag in hashtags)
             {
                 hashtagNames.Add(hashtag.Name);

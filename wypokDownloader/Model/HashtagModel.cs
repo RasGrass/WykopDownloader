@@ -1,16 +1,13 @@
-﻿using System.Collections.Generic;
-
-namespace wypokDownloader.Model
+﻿namespace wypokDownloader.Model
 {
     public class HashtagModel
     {
-        private string _name;
+        private readonly string _name;
         private string _directory;
 
         public string Name
         {
             get { return _name; }
-            set { _name = value; }
         }
 
         public string Directory
@@ -25,23 +22,6 @@ namespace wypokDownloader.Model
             _directory = hashtag.Substring(1);
         }
 
-        private sealed class NameEqualityComparer : IEqualityComparer<HashtagModel>
-        {
-            public bool Equals(HashtagModel x, HashtagModel y)
-            {
-                if (ReferenceEquals(x, y)) return true;
-                if (ReferenceEquals(x, null)) return false;
-                if (ReferenceEquals(y, null)) return false;
-                if (x.GetType() != y.GetType()) return false;
-                return string.Equals(x._name, y._name);
-            }
-
-            public int GetHashCode(HashtagModel obj)
-            {
-                return (obj._name != null ? obj._name.GetHashCode() : 0);
-            }
-        }
-
         protected bool Equals(HashtagModel other)
         {
             return string.Equals(_name, other._name);
@@ -51,7 +31,7 @@ namespace wypokDownloader.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((HashtagModel) obj);
         }
 

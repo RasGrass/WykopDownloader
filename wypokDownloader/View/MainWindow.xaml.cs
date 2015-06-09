@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -21,21 +20,21 @@ namespace wypokDownloader.View
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : INotifyPropertyChanged
     {
         public List<EntryModel> Entries { get; set; }
         private readonly BackgroundWorker _backgroundWorker = new BackgroundWorker();
-        private string username;
+        private string _username;
         private readonly WykopApi _api = new WykopApi("1N2KUcbg8q");
-        private readonly BackgroundWorker synchrozizeNoWorker = new BackgroundWorker();
-        private List<HashtagModel> selectedHashtags = new List<HashtagModel>();
+        private readonly BackgroundWorker _synchrozizeNoWorker = new BackgroundWorker();
+        private List<HashtagModel> _selectedHashtags = new List<HashtagModel>();
 
 
 
         public MainWindow()
         {
-            synchrozizeNoWorker.DoWork += synchronizeNow_DoWork;
-            synchrozizeNoWorker.RunWorkerCompleted += synchronizeNow_WorkCompletd;
+            _synchrozizeNoWorker.DoWork += synchronizeNow_DoWork;
+            _synchrozizeNoWorker.RunWorkerCompleted += synchronizeNow_WorkCompletd;
             InitializeComponent();
         }
 
@@ -50,62 +49,106 @@ namespace wypokDownloader.View
         {
             _backgroundWorker.RunWorkerCompleted += worker_RunWorkerCompleted;
             _backgroundWorker.DoWork += worker_DoWork;
-            _backgroundWorker.RunWorkerAsync();
-            LoadingGrid.Visibility = Visibility.Visible;
-            LoadingGridHashtags.Visibility = Visibility.Visible;
+            LoadingGrid.Visibility = Visibility.Collapsed;
+            LoadingGridHashtags.Visibility = Visibility.Collapsed;
 
         }
 
         private void synchronizeNow_WorkCompletd(object sender, RunWorkerCompletedEventArgs e)
         {
-            SynchronizeNowStatus.Text = "Synchronizacja zakonczończona!";
+            if (SynchronizeNowStatus.Text != "Wybierz folder!" && SynchronizeNowStatus.Text != "Nie wpisów do przetworzenia.")
+                SynchronizeNowStatus.Text = "Synchronizacja zakonczończona!";
         }
 
         private void synchronizeNow_DoWork(object sender, DoWorkEventArgs e)
         {
-            SynchronizeNowStatus.Dispatcher.Invoke(
-                DispatcherPriority.Normal, new Action(() => { SynchronizeNowStatus.Visibility = Visibility.Visible; }));
-            foreach (EntryModel entry in Entries)
+            SetStatusText("");
+            string directory = "";
+            Directory.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () => directory = Directory.Text));
+            Directory.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () => Directory.BorderBrush = new SolidColorBrush(Colors.Black)));
+            if (directory == "")
             {
-                foreach (HashtagModel hashtag in entry.HashTags)
+                SynchronizeNowStatus.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () =>
+                            SynchronizeNowStatus.Text = "Wybierz folder!"));
+                Directory.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () => Directory.BorderBrush = new SolidColorBrush(Colors.Red)));
+                return;
+            }
+            if (Entries != null && Entries.Count > 0)
+            {
+                SynchronizeNowStatus.Dispatcher.Invoke(
+                    DispatcherPriority.Normal,
+                    new Action(() => { SynchronizeNowStatus.Visibility = Visibility.Visible; }));
+                foreach (EntryModel entry in Entries)
                 {
-                    if (selectedHashtags.Contains(hashtag))
+                    foreach (HashtagModel hashtag in entry.HashTags)
                     {
-                        string selectedDir = string.Empty;
-                        Directory.Dispatcher.Invoke(DispatcherPriority.Normal,
-                                new Action(() => { selectedDir = this.Directory.Text; }));
-                        DirectoryInfo dir = new DirectoryInfo(selectedDir);
-                        selectedDir = selectedDir + "\\" + hashtag.Directory;
-                        try
+                        if (_selectedHashtags.Contains(hashtag))
                         {
-                            // Determine whether the directory exists. 
-                            if (!System.IO.Directory.Exists(selectedDir))
+                            string selectedDir = string.Empty;
+                            Directory.Dispatcher.Invoke(DispatcherPriority.Normal,
+                                new Action(() => { selectedDir = Directory.Text; }));
+                            selectedDir = selectedDir + "\\" + hashtag.Directory;
+                            try
                             {
-                                dir = System.IO.Directory.CreateDirectory(selectedDir);
+                                // Determine whether the directory exists. 
+                                if (!System.IO.Directory.Exists(selectedDir))
+                                {
+                                    System.IO.Directory.CreateDirectory(selectedDir);
+                                }
+
+                                string url = entry.Embed[0].Url;
+                                WebClient webClient = new WebClient();
+                                string filename = url.Substring(url.LastIndexOf("/", StringComparison.Ordinal));
+                                webClient.DownloadFile(url, selectedDir + "//" + filename);
+                                break;
+                            }
+                            catch (Exception exception)
+                            {
+                                Console.WriteLine(@"The process failed: {0}", exception);
                             }
 
-                            string url = entry.Embed[0].Url;
-                            WebClient webClient = new WebClient();
-                            string filename = url.Substring(url.LastIndexOf("/"));
-                            webClient.DownloadFile(url, selectedDir+"//"+filename);
-                            break;
                         }
-                        catch (Exception exception)
-                        {
-                            Console.WriteLine("The process failed: {0}", exception.ToString());
-                        } 
-                        
                     }
                 }
 
             }
-            
+            else
+            {
+                SetStatusText("Nie wpisów do przetworzenia.");
+            }
+
         }
 
         private void worker_DoWork(object sender, DoWorkEventArgs e)
         {
+            Dispatcher.Invoke(DispatcherPriority.Normal,
+                new Action(() => LoadingGrid.Visibility = Visibility.Visible));
+            Dispatcher.Invoke(DispatcherPriority.Normal,
+                new Action(() => LoadingGridHashtags.Visibility = Visibility.Visible));
+            SetStatusText("");
+            string res = _api.DoRequest("profile/votedentries/" + _username + "/appkey,tI2TqhiVLa,format,json", null);
+            SynchronizeNowStatus.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () => UsernameTxtBox.BorderBrush = new SolidColorBrush(Colors.Black)));
+            SetStatusText("");
 
-            string res = _api.DoRequest("profile/votedentries/" + username + "/appkey,tI2TqhiVLa,format,json", null);
+            if (res.StartsWith("{\"error\""))
+            {
+                SetStatusText("Nie znaleziono użytkownika lub wystąpiły problemy z połączeniem");
+                SynchronizeNowStatus.Dispatcher.Invoke(DispatcherPriority.Normal,
+                    new Action(
+                        () => UsernameTxtBox.BorderBrush = new SolidColorBrush(Colors.Red)));
+                return;
+            }
+
             JsonSerializer serializer = new JsonSerializer();
             Entries = serializer.DeserializeEntries(res);
 
@@ -113,13 +156,13 @@ namespace wypokDownloader.View
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-
-            EntriesListBox.ItemsSource = Entries.Where(model => model.Embed.Count > 0 && model.Embed[0].Type.Equals("image"));
-            HashtagList.ItemsSource = EntryModel.hashtagsExtractor.Hashtags.ToObservableCollection();
+            if (Entries != null && Entries.Count > 0)
+            {
+                EntriesListBox.ItemsSource = Entries.Where(model => model.Embed.Count > 0 && model.Embed[0].Type.Equals("image"));
+                HashtagList.ItemsSource = EntryModel.HashtagsExtractor.Hashtags.ToObservableCollection();
+            }
             LoadingGrid.Visibility = Visibility.Collapsed;
             LoadingGridHashtags.Visibility = Visibility.Collapsed;
-
-
 
         }
 
@@ -127,9 +170,11 @@ namespace wypokDownloader.View
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
+            UsernameTxtBox.BorderBrush = new SolidColorBrush(Colors.Black);
             LoadingGrid.Visibility = Visibility.Visible;
             if (!_backgroundWorker.IsBusy)
             {
+                _username = UsernameTxtBox.Text;
                 _backgroundWorker.RunWorkerAsync();
             }
 
@@ -154,19 +199,19 @@ namespace wypokDownloader.View
                     if (element.Name == "directory" && checkbox.IsChecked == true)
                     {
                         element.Visibility = Visibility.Visible;
-                        selectedHashtags.Add(context);
+                        _selectedHashtags.Add(context);
                     }
                     else
                     {
                         element.Visibility = Visibility.Hidden;
-                        selectedHashtags.Remove(context);
+                        _selectedHashtags.Remove(context);
                     }
                 }
             }
 
         }
 
-       
+
 
         public IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
@@ -193,13 +238,13 @@ namespace wypokDownloader.View
         {
             if (e.Key != Key.Enter) return;
 
-            EntryModel.hashtagsExtractor.Hashtags.Clear();
+            EntryModel.HashtagsExtractor.Hashtags.Clear();
             LoadingGrid.Visibility = Visibility.Visible;
             LoadingGridHashtags.Visibility = Visibility.Visible;
 
 
             var usernameTextBox = (TextBox)sender;
-            username = usernameTextBox.Text;
+            _username = usernameTextBox.Text;
             if (!_backgroundWorker.IsBusy)
             {
                 _backgroundWorker.RunWorkerAsync();
@@ -214,7 +259,16 @@ namespace wypokDownloader.View
 
         private void SynchronizeNow_OnClick(object sender, RoutedEventArgs e)
         {
-            synchrozizeNoWorker.RunWorkerAsync();
+            _synchrozizeNoWorker.RunWorkerAsync();
+        }
+
+
+        private void SetStatusText(string text)
+        {
+            Dispatcher.Invoke(DispatcherPriority.Normal,
+                   new Action(
+                       () =>
+                           SynchronizeNowStatus.Text = text));
         }
     }
 }

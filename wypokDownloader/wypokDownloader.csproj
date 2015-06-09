@@ -55,6 +55,9 @@
     <Win32Resource>
     </Win32Resource>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="DbNetLink.DbNetSuite">
       <HintPath>..\packages\DbNetSuite.4.4.4876\lib\net40\DbNetLink.DbNetSuite.dll</HintPath>

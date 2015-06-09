@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Drawing;
-using System.IO;
-using System.Net;
-using System.Windows.Media.Imaging;
 using wypokDownloader.Helpers;
 
 namespace wypokDownloader.Model
@@ -29,7 +24,7 @@ namespace wypokDownloader.Model
         private readonly List<Embed> _embed;
         private readonly List<HashtagModel> _hashtags;
         private bool _synchronized;
-        public static HashtagsExtractor hashtagsExtractor = new HashtagsExtractor();
+        public static HashtagsExtractor HashtagsExtractor = new HashtagsExtractor();
 
         public EntryModel()
         {
@@ -53,7 +48,7 @@ namespace wypokDownloader.Model
             _voters = voters;
             _userFavorite = userFavorite;
             _embed = embed;
-            _hashtags = hashtagsExtractor.ExtractHashTags(content);
+            _hashtags = HashtagsExtractor.ExtractHashTags(content);
         }
 
 
@@ -152,24 +147,6 @@ namespace wypokDownloader.Model
             }
         }
 
-
-        public static Image GetImageFromUrl(string url)
-        {
-            if (url == null ||url.Contains("youtube") || url.Contains("gfycat"))
-            {
-                return null;
-            }
-            HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(url);
-            BitmapImage b = new BitmapImage();
-            
-            using (HttpWebResponse httpWebReponse = (HttpWebResponse)httpWebRequest.GetResponse())
-            {
-                using (Stream stream = httpWebReponse.GetResponseStream())
-                {
-                    return Image.FromStream(stream);
-                }
-            }
-        }
         public override string ToString()
         {
             return Embed.ToArray()[0].Type + " " + Embed.ToArray()[0].Source;

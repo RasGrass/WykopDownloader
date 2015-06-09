@@ -40,15 +40,6 @@
                 </Grid>
             </DataTemplate>
 
-            <DataTemplate x:Key="LoadingTemplate">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"></RowDefinition>
-                    </Grid.RowDefinitions>
-                    <StackPanel Orientation="Vertical" Grid.Row="0">
-                    </StackPanel>
-                </Grid>
-            </DataTemplate>
         </Grid.Resources>
         <Grid Grid.Row="0" Grid.Column="0">
             <Grid.ColumnDefinitions>
@@ -64,7 +55,7 @@
             <Image gif:ImageBehavior.AnimatedSource="loading71.gif" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Stretch="Uniform" Source="loading71.gif" Margin="1" ></Image>
         </Grid>
         <StatusBar Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" x:Name="StatusBar">
-            <TextBlock Text="Synchronizacja w toku...." x:Name="SynchronizeNowStatus" Visibility="Hidden"></TextBlock>
+            <TextBlock Text="" x:Name="SynchronizeNowStatus"></TextBlock>
         </StatusBar>
 
         <Grid Grid.Column="1" Grid.Row="1" HorizontalAlignment="Stretch">

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace wypokDownloader.Model
+﻿namespace wypokDownloader.Model
 {
     public class Embed
     {
