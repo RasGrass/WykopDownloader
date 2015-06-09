@@ -156,7 +156,7 @@ namespace wypokDownloader.View
 
         private void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (Entries != null && Entries.Count > 0)
+            if (Entries != null)
             {
                 EntriesListBox.ItemsSource = Entries.Where(model => model.Embed.Count > 0 && model.Embed[0].Type.Equals("image"));
                 HashtagList.ItemsSource = EntryModel.HashtagsExtractor.Hashtags.ToObservableCollection();
